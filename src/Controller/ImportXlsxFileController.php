@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Band;
-use DateTime;
+use App\Repository\BandRepository;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,17 +12,21 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ImportXlsxFileController extends AbstractController
 {
     public function __construct(
-        private EntityManagerInterface $em,
+        private SerializerInterface $serializer,
+        private BandRepository $bandRepository,
+        private EntityManagerInterface $em
+
     ){}
 
     /**
-     * import xlsx data to bdd.
+     * import xlsx data and sent every in messagebus.
      */
-    #[Route('/import', name: "import_xlsx_file", methods: ['POST'])]
+    #[Route('/api/bands/import/xlsx', name: "import_xlsx_file", methods: ['POST'])]
     public function __invoke(Request $request): Response
     {
         $file = $request->files->get('file');
@@ -42,16 +46,28 @@ class ImportXlsxFileController extends AbstractController
         }
 
         $spreadsheet = IOFactory::load($fileFolder . $file->getClientOriginalName());
-        $row = $spreadsheet->getActiveSheet()->removeRow(1);
+        $spreadsheet->getActiveSheet()->removeRow(1);
         $data = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
+        $this->persitsData($data);
+
+        $all = $this->serializer->serialize($this->bandRepository->findAll(), 'json');
+        return new JsonResponse($all, json: true);
+    }
+
+    /**
+     * persit the row in bdd.
+     * 
+     * @param string[] $data
+     */
+    private function persitsData(array $data){
 
         foreach($data as $row){
-            $band = (new Band())
+                $band = (new Band())
                 ->setName($row['A'])
                 ->setOrigin($row['B'])
                 ->setCity($row['C'])
-                ->setStartDate(empty($row['D']) ? null : new DateTime($row['D']))
-                ->setEndDate(empty($row['E']) ? null : new DateTime($row['E']))
+                ->setStartDate(empty($row['D']) ? null : new \DateTime($row['D']))
+                ->setEndDate(empty($row['E']) ? null : new \DateTime($row['E']))
                 ->setFounder($row['F'])
                 ->setTotalMember((int) $row['G'])
                 ->setGenre($row['H'])
@@ -59,9 +75,6 @@ class ImportXlsxFileController extends AbstractController
             ;
             $this->em->persist($band);
         }
-
         $this->em->flush();
-
-        return new Response('Ok');
     }
 }

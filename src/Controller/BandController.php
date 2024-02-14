@@ -14,6 +14,9 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[Route('/api/bands')]
+/**
+ * Band CRUD
+ */
 class BandController extends AbstractController
 {
     public function __construct(
@@ -22,6 +25,9 @@ class BandController extends AbstractController
         private BandRepository $bandRepository
     ){}
 
+    /**
+     * show all bands in bdd.
+     */
     #[Route('/', name: 'app_band_index', methods: ['GET'])]
     public function all(): Response
     {
@@ -29,6 +35,9 @@ class BandController extends AbstractController
         return new JsonResponse($all, json: true);
     }
 
+    /**
+     * create band.
+     */
     #[Route('', name: 'app_band_new', methods: ['POST'])]
     public function new(Request $request): Response
     {
@@ -41,14 +50,20 @@ class BandController extends AbstractController
         return new JsonResponse($json, Response::HTTP_CREATED, json: true);
     }
 
+    /**
+     * get one band.
+     */
     #[Route('/{id}', name: 'app_band_show', methods: ['GET'])]
     public function show(Band $band): Response
     {
         $jsonBook =$this->serializer->serialize($band, 'json');
 
-        return new JsonResponse($jsonBook, Response::HTTP_CREATED, json: true);
+        return new JsonResponse($jsonBook, json: true);
     }
 
+    /**
+     * update one band.
+     */
     #[Route('/{id}', name: 'app_band_edit', methods: ['PUT'])]
     public function edit(Request $request, Band $band): Response
     {
@@ -58,9 +73,12 @@ class BandController extends AbstractController
 
         $json =$this->serializer->serialize($band, 'json');
 
-        return new JsonResponse($json, Response::HTTP_CREATED, json: true);
+        return new JsonResponse($json, json: true);
     }
 
+    /**
+     * delete one band.
+     */
     #[Route('/{id}', name: 'app_band_delete', methods: ['DELETE'])]
     public function delete(Band $band): Response
     {

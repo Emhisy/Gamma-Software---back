@@ -36,7 +36,7 @@ class Band
     private ?int $totalMember = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $Genre = null;
+    private ?string $genre = null;
 
     #[ORM\Column(length: 10000, nullable: true)]
     private ?string $description = null;
@@ -132,12 +132,12 @@ class Band
 
     public function getGenre(): ?string
     {
-        return $this->Genre;
+        return $this->genre;
     }
 
-    public function setGenre(?string $Genre): static
+    public function setGenre(?string $genre): static
     {
-        $this->Genre = $Genre;
+        $this->genre = $genre;
 
         return $this;
     }
